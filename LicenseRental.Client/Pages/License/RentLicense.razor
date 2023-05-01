@@ -1,0 +1,138 @@
+﻿@page "/license/rentlicense"
+@inject HttpClient Http
+
+<PageTitle>Rent License</PageTitle>
+
+
+<h3>Rent a License [@clientName]</h3>
+<button type="button" class="btn btn-primary" @onclick="RentALicense">Rent a license</button>
+
+@if (!string.IsNullOrEmpty(licenseName) && DialogIsOpen)
+{
+    <Dialog Caption="@caption"
+        Message="@message"
+        OnClose="@OnDialogOk"
+        Type="Dialog.Category.Okay">
+    </Dialog>
+}
+@if (string.IsNullOrEmpty(licenseName) && DialogIsOpen)
+{
+    <Dialog Caption="@caption"
+        Message="@message"
+        OnClose="@OnDialogOk"
+        Type="Dialog.Category.Okay">
+    </Dialog>
+}
+@if (!String.IsNullOrEmpty(ErrorMessage))
+{
+    <div style="color:red">@ErrorMessage</div>
+}
+@code {
+    [Inject]
+    public ISessionIdProvider SessionIdProvider { get; set; }
+    private string message;
+    private string caption;
+    private bool DialogIsOpen = false;
+    private const string ClientServiceEndpoint = "https://localhost:7233/Client";
+    private const string LicenseServiceEndpoint = "https://localhost:7233/License";
+    private string? ErrorMessage { get; set; }
+    private string? licenseName { get; set; }
+    private License? license { get; set; }
+    private string clientName { get; set; }
+    private Guid clientId { get; set; }
+    private static System.Timers.Timer aTimer;
+    private int counter = 0;
+
+    private void OpenDialog()
+    {
+        DialogIsOpen = true;
+        caption = "Rented license";
+        message = $"You received license \"{licenseName}\"";
+    }
+
+    private async Task OnDialogOk()
+    {
+        DialogIsOpen = false;
+    }
+
+    public void StartTimer()
+    {
+        aTimer = new System.Timers.Timer(1000);
+        aTimer.Elapsed += CountDownTimer;
+        aTimer.Enabled = true;
+    }
+
+    public void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
+    {
+        if (counter > 0)
+        {
+            counter -= 1;
+        }
+        else
+        {
+            licenseName = "";
+            DialogIsOpen = true;
+            caption = "Message!";
+            message = $"License \"{license.Name}\" expired!";
+            aTimer.Enabled = false;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        clientId = SessionIdProvider.SessionId;
+        await AddClient();
+    }
+
+    private async Task AddClient()
+    {
+        var result = await Http.GetFromJsonAsync<Client>(ClientServiceEndpoint + "/" + clientId);
+        if (result.Id == Guid.Empty)
+        {
+            var httpResponse = await Http.PostAsJsonAsync(ClientServiceEndpoint, clientId);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                result = await Http.GetFromJsonAsync<Client>(ClientServiceEndpoint + "/" + clientId);
+            }
+            else
+            {
+                ErrorMessage = await httpResponse.Content.ReadAsStringAsync();
+            }
+        }
+        clientName = result.Name;
+        StateHasChanged();
+    }
+
+    private async Task RentALicense()
+    {
+        var httpResponse = await Http.PutAsJsonAsync(LicenseServiceEndpoint, clientId);
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            var result = await Http.GetFromJsonAsync<License>(LicenseServiceEndpoint + "/" + clientId);
+            licenseName = result.Name;
+            OpenDialog();
+            license = result;
+            ErrorMessage = string.Empty;
+            counter = (license.ExpirationDate.Value - DateTime.Now).Seconds;
+            StartTimer();
+            StateHasChanged();
+        }
+        else
+        {
+            ErrorMessage = await httpResponse.Content.ReadAsStringAsync();
+        }
+        StateHasChanged();
+    }
+    //public class Client
+    //{
+    //    public Guid Id { get; set; }
+    //    public string? Name { get; set; }
+    //}
+    //private class License
+    //{
+    //    public Guid Id { get; set; }
+    //    public string Name { get; set; } = default!;
+    //    public string Status { get; set; } = default!;
+    //    public DateTime ExpirationDate { get; set; }
+    //}
+}

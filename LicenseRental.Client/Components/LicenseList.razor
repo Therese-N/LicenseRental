@@ -1,0 +1,59 @@
+﻿@inject HttpClient Http
+
+<div class="card-body">
+<p>Licenses on server</p>
+
+@if (licenses == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>License</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var license in licenses)
+            {
+                <tr>
+                    <td class="col-md-6">@license.Name</td>
+                    <td class="col-md-6">@license.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+</div>
+@code {
+    private const string ServiceEndpoint = "https://localhost:7233/License";
+
+    private License[]? licenses;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var timer = new System.Threading.Timer((_) =>
+        {
+
+            InvokeAsync(async () =>
+            {
+                licenses = await Http.GetFromJsonAsync<License[]>(ServiceEndpoint);
+                StateHasChanged();
+            });
+        }, null, 0, 1000);
+
+    }
+
+    //private class License
+    //{
+    //    public Guid Id { get; set; }
+    //    public string Name { get; set; } = default!;
+    //    public bool Rented { get; set; }
+    //    public string Status { get; set; } = default!;
+    //    public DateTime? Expires { get; set; }
+    //}
+}

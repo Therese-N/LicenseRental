@@ -1,0 +1,61 @@
+﻿@page "/admin/addlicense"
+@inject HttpClient Http
+
+<PageTitle>Admin panel</PageTitle>
+
+<h3>Add License</h3>
+<div>
+    <button type="button" class="btn btn-primary" @onclick="() => OpenDialog()">Add License</button>
+    @if (String.IsNullOrEmpty(ErrorMessage) == false)
+    {
+        <div style="color:red">@ErrorMessage</div>
+    }
+</div>
+<div>
+    <LicenseList/>
+</div>
+@if (DialogIsOpen)
+{
+   <Dialog Caption="Add license"
+           Message="@message"
+           OnClose="@OnDialogClose"
+           Type="Dialog.Category.SaveNot">
+   </Dialog>
+}
+@code {
+    private string message;
+    private bool DialogIsOpen = false;
+    private const string ServiceEndpoint = "https://localhost:7233/License";
+    private string? ErrorMessage { get; set; }
+    private string _licenseName { get; set; }
+
+    private void OpenDialog()
+    {
+        DialogIsOpen = true;
+        message = "";
+    }
+
+    private async Task OnDialogClose(string licenseName)
+    {
+        if (!string.IsNullOrEmpty(licenseName))
+        {
+            _licenseName = licenseName;
+            AddLicenseToList();
+        }
+        DialogIsOpen = false;
+    }
+
+    private async Task AddLicenseToList()
+    {
+        var httpResponse = await Http.PostAsJsonAsync(ServiceEndpoint, _licenseName);
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            ErrorMessage = "";
+        }
+        else
+        {
+            ErrorMessage = await httpResponse.Content.ReadAsStringAsync();
+        }
+        StateHasChanged();
+    }
+}
