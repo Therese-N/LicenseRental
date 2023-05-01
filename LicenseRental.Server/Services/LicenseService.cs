@@ -15,7 +15,8 @@ namespace LicenseRental.Server.Services
         }
         public Task<License> AddLicenseAsync(string name)
         {
-            var licenseNames = _licenseRepository.GetLicenses().Select(x => x.Name).ToList();
+            var licenses = _licenseRepository.GetLicenses();
+            var licenseNames = licenses.Result.Select(x => x.Name).ToList();
             if (string.IsNullOrEmpty(name) || licenseNames.Contains(name))
             {
                 throw new Exception("License name must be an unique alphanumeric string!");
@@ -35,9 +36,9 @@ namespace LicenseRental.Server.Services
             return _licenseRepository.GetLicenseByClientId(clientId);
         }
 
-        public IEnumerable<License> GetLicenses() 
+        public async Task<IEnumerable<License>> GetLicenses() 
         {
-            return _licenseRepository.GetLicenses();
+            return await _licenseRepository.GetLicenses();
         }
         public async Task<License> UpdateLicenseAsync(Guid renterId) 
         {
@@ -48,7 +49,7 @@ namespace LicenseRental.Server.Services
                 throw new Exception("Client already have an active license");
             }
             
-            var licenseForRent = licenses.Where(x => x.LicenseRenter == null || x.Status.Equals("not rented")).FirstOrDefault();
+            var licenseForRent = licenses.Result.Where(x => x.LicenseRenter == null || x.Status.Equals("not rented")).FirstOrDefault();
             if (licenseForRent != null)
             {
                 _logger.LogInformation($"{DateTime.Now}: License with name {licenseForRent.Name} was rented by clientId {renterId}.");
@@ -60,7 +61,7 @@ namespace LicenseRental.Server.Services
 
         public IEnumerable<License> GetExpiredLicenses() 
         {
-            var licenses = _licenseRepository.GetLicenses().ToList();
+            var licenses = _licenseRepository.GetLicenses().Result.ToList();
             return licenses.Where(x => x.LicenseRenter?.ExpirationDate < DateTime.Now).ToList();
         }
     }

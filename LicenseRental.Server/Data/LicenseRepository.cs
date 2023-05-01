@@ -29,7 +29,7 @@ namespace LicenseRental.Server.Data
                 .FirstOrDefaultAsync();
         }
 
-        public IQueryable<License> GetLicenses()
+        public async Task<IQueryable<License>> GetLicenses()
         {
             return _appDbContext.Licenses.Include(x => x.LicenseRenter.Client);
         }

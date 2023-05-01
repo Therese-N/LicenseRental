@@ -4,7 +4,7 @@ namespace LicenseRental.Server.Data.Interfaces
 {
     public interface ILicenseRepository
     {
-        IQueryable<License> GetLicenses();
+        Task<IQueryable<License>> GetLicenses();
         Task<License?> GetLicense(int licenseId);
         Task<License> AddLicense(License license);
         Task<License?> UpdateLicense(License license, Guid renterId);

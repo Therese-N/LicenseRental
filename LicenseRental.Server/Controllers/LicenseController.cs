@@ -16,9 +16,9 @@ namespace LicenseRental.Server.Controllers
         }
 
         [HttpGet]
-        public ActionResult GetAll()
+        public async Task<ActionResult> GetAll()
         {
-            return Ok(_licenseService.GetLicenses());
+            return Ok(await _licenseService.GetLicenses());
         }
 
         [HttpPost]
