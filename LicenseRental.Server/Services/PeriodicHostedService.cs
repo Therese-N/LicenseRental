@@ -1,4 +1,5 @@
-﻿using LicenseRental.Shared.Models;
+﻿using LicenseRental.Server.Services.Interfaces;
+using LicenseRental.Shared.Models;
 
 namespace LicenseRental.Server.Services
 {
@@ -31,13 +32,12 @@ namespace LicenseRental.Server.Services
                     if (IsEnabled)
                     {
                         await using AsyncServiceScope asyncScope = _factory.CreateAsyncScope();
-                        LicenseService licenseService = asyncScope.ServiceProvider.GetRequiredService<LicenseService>();
+                        ILicenseService licenseService = asyncScope.ServiceProvider.GetRequiredService<ILicenseService>();
                         var expiredLicenses = licenseService.GetExpiredLicenses();
                         var newlyExpiredLicenses = expiredLicenses.Where(x => !_expiredLicenses.Any(y => x.Id == y.Id && x.LicenseRenter.ExpirationDate == y.LicenseRenter.ExpirationDate)).ToList();
                         _expiredLicenses.AddRange(newlyExpiredLicenses);
                         newlyExpiredLicenses.ForEach(x => _logger.LogInformation(
-                            $"{DateTime.Now}: Executed PeriodicHostedService - License with name {x.Name} expired {x.LicenseRenter.ExpirationDate}"));
-                        _executionCount++;
+                            $"{DateTime.Now}: License with name {x.Name} expired {x.LicenseRenter.ExpirationDate}"));
                 
                     }
                     else

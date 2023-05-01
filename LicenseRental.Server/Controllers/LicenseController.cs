@@ -1,4 +1,4 @@
-﻿using LicenseRental.Server.Services;
+﻿using LicenseRental.Server.Services.Interfaces;
 using LicenseRental.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +8,9 @@ namespace LicenseRental.Server.Controllers
     [Route("[controller]")]
     public class LicenseController : ControllerBase
     {
-        private readonly LicenseService _licenseService;
+        private readonly ILicenseService _licenseService;
 
-        public LicenseController(LicenseService licenseService)
+        public LicenseController(ILicenseService licenseService)
         {
             _licenseService = licenseService;
         }

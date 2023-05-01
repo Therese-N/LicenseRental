@@ -1,9 +1,10 @@
 ﻿using LicenseRental.Server.Data.Interfaces;
+using LicenseRental.Server.Services.Interfaces;
 using LicenseRental.Shared.Models;
 
 namespace LicenseRental.Server.Services
 {
-    public class LicenseService// : ILicenseService
+    public class LicenseService : ILicenseService
     {
         private readonly ILicenseRepository _licenseRepository;
         private readonly ILogger<LicenseService> _logger;

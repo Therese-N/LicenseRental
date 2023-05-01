@@ -15,7 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Filename=./Lic
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ILicenseRepository, LicenseRepository>();
-builder.Services.AddScoped<LicenseService>(); 
+builder.Services.AddScoped<ILicenseService, LicenseService>(); 
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddSingleton<PeriodicHostedService>();
